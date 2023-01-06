@@ -70,11 +70,9 @@ class IFigure(ABC):
         """Various possible states have to be provided"""
         ...
 
-
     @abstractmethod
     def change_state(self, key: Key):
         pass
-
 
     @abstractmethod
     def get_current_state(self):
@@ -94,7 +92,7 @@ class IField(ABC):
 
     @property
     @abstractmethod
-    def _state(self) -> IFigureState:
+    def _state(self) -> IFieldState:
         ...
 
     @abstractmethod
