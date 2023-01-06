@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import Enum, auto
-from typing import Dict, Tuple, List, Optional, Iterable
+from typing import Dict, Tuple, List, Optional, Iterable, Union
 
 import tetris.config as cfg
 
@@ -18,7 +18,7 @@ class IFigureState(ABC):
     Interface for a figure various states.
     Supposed to be nested iterable
     """
-    def __new__(cls, *args, **kwargs):
+    def __new__(cls, *args: Optional[Iterable[Iterable]], **kwargs: Optional[int]):
         """Force check to prove iterable[iterable]"""
         given_state = args[0] if len(args) else None or kwargs.get('state')
         cls._validate_nested_iterable(given_state)
@@ -116,7 +116,7 @@ class IPhysic(ABC):
 class FieldState(IFieldState, List):
     """Type to store a state of a game field"""
 
-    def __init__(self, state: Optional[IFieldState] = None, **kwargs: int):
+    def __init__(self, state: Optional[Union[IFieldState, Iterable[Iterable]]] = None, **kwargs: int):
         """
         Creates an empty List[List[int]]-like with 'width' and 'height' parameters specified in kwargs,
         or validates a given state
@@ -135,7 +135,7 @@ class FieldState(IFieldState, List):
 class FigureState(IFigureState, List):
     """Type to store a state of a figure"""
 
-    def __init__(self, state: Optional[IFigureState] = None, **kwargs: int):
+    def __init__(self, state: Union[IFigureState, Iterable[Iterable], type(None)] = None, **kwargs: int):
         """
         Creates an empty List[List[int]]-like with 'width' and 'height' parameters specified in kwargs,
         or validates a given state
@@ -244,7 +244,7 @@ class FigureBuilder(IFigureBuilder):
             empty = FigureState([[0] * width for _ in range(height)])
             self.__figure[Key[key]] = empty
 
-    def set_state(self, *, key: Key, state: IFigureState):
+    def set_state(self, *, key: Key, state: Union[IFigureState, Iterable[Iterable]]):
         if self.__figure is None:
             raise ValueError(f'Builder hasn''t been reset. Use reset() and set_state() to build a figure')
         state = FigureState(state)
