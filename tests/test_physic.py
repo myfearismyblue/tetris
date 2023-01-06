@@ -9,6 +9,7 @@ from tetris.physic import FieldState
                           ([[0, 0], [0, 0]], [], {'width': 2, 'height': 2}),
                           ([[0, 0], [0, 0]], [], {'state': [[0, 0], [0, 0]]}),
                           ([[]], [], {'width': 0, 'height': 0}),
+                          ([[0, 0], [0, 0]], [None], {'width': 2, 'height': 2}),
                           ])
 def test_FieldState(expected,  args, kwargs):
     assert FieldState(*args, **kwargs) == expected
