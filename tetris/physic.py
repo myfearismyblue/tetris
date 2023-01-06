@@ -127,3 +127,18 @@ class IPhysic(ABC):
         ...
 
 
+class FieldState(IFieldState, List):
+    """Type to store a state of a game field"""
+
+    def __init__(self, state: Optional[IFieldState] = None, **kwargs: int):
+        """
+        Creates an empty List[List[int]]-like with 'width' and 'height' parameters specified in kwargs,
+        or validates a given state
+        """
+        if state is None:
+            try:
+                super().__init__([[0] * kwargs['width'] for _ in range(kwargs['height'])])
+            except KeyError as e:
+                raise TypeError(f'If state is not given, width and height kwargs have to be provided') from e
+        else:
+            super().__init__(state)
