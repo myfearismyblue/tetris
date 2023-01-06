@@ -14,8 +14,34 @@ class IFigureState(ABC):
 
 
 class IFieldState(ABC):
-    """Interface for game field data structure"""
-    ...
+    """
+    Interface for game field data structure
+    Supposed to be nested iterable
+    """
+
+    def __new__(cls, *args, **kwargs):
+        """Force check to prove iterable[iterable]"""
+        given_state = args[0] if len(args) else None or kwargs.get('state')
+        cls._validate_nested_iterable(given_state)
+        self = super().__new__(cls)
+        return self
+
+    @staticmethod
+    def _validate_nested_iterable(state) -> None:
+        """
+        Throws an exception if a given state is not None neither iterable of iterables
+        :param state: List[List]-like array or None
+        :return: None
+        """
+        if state is None:
+            return
+        try:
+            if '__getitem__' in dir(state) and '__getitem__' in dir(state[0]):
+                return  # Supposed that the iterable[] syntax should be provided
+        except IndexError as flat_list_given:
+            raise TypeError(f'{state=} should be Iterable[Iterable] but was given a flat iterable') from flat_list_given
+
+        raise TypeError(f'Validation of {state=} is failed. Should be Iterable[Iterable] but was given {type(state)}')
 
 
 class IFigure(ABC):
