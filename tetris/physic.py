@@ -139,7 +139,7 @@ class FieldState(IFieldState, List):
         """
         if state is None:
             try:
-                # should maintain the consistent of [[]] if height is 0
+                # should maintain the consistence of [[]] if height is 0
                 kwargs['height'] = 1 if kwargs['height'] == 0 else kwargs['height']
                 super().__init__([[0] * kwargs['width'] for _ in range(kwargs['height'])])
             except KeyError as e:
@@ -155,9 +155,9 @@ class Field(IField):
         Creates an empty List[List[int]]-like with 'width' and 'height' parameters specified in kwargs,
         or validates a given state
         """
-        self.__width = width
-        self.__height = height
-        self.__state = FieldState(width, height)
+        self.__state = FieldState(state, width=width, height=height)
+        self.__width = len(self.__state[0])
+        self.__height = len(self.__state)
 
     @property
     def _width(self) -> int:
@@ -188,5 +188,6 @@ class Field(IField):
         self.__state = val
 
     def _update_field_state(self, figure: IFigure):
+        """Appends the figure to the field plot"""
         pass
 
