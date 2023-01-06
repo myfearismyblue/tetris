@@ -144,3 +144,47 @@ class FieldState(IFieldState, List):
                 raise TypeError(f'If state is not given, width and height kwargs have to be provided') from e
         else:
             super().__init__(state)
+
+
+class Field(IField):
+
+    def __init__(self, *, width: int = cfg.FIELD_WIDTH, height: int = cfg.FIELD_HEIGHT, state: IFieldState = None):
+        """
+        Creates an empty List[List[int]]-like with 'width' and 'height' parameters specified in kwargs,
+        or validates a given state
+        """
+        self.__width = width
+        self.__height = height
+        self.__state = FieldState(width, height)
+
+    @property
+    def _width(self) -> int:
+        return self.__width
+
+    @_width.setter
+    def _width(self, val: int):
+        if not isinstance(val, int):
+            raise TypeError(f'Width can not be set with {val}')
+        self.__width = val
+
+    @property
+    def _height(self) -> int:
+        return self.__height
+
+    @_height.setter
+    def _height(self, val: int):
+        if not isinstance(val, int):
+            raise TypeError(f'Height can not be set with {val}')
+        self.__height = val
+
+    @property
+    def _state(self) -> IFieldState:
+        return self.__state
+
+    @_state.setter
+    def _state(self, val: IFieldState):
+        self.__state = val
+
+    def _update_field_state(self, figure: IFigure):
+        pass
+
