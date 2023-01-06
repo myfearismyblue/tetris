@@ -1,11 +1,15 @@
 from abc import ABC, abstractmethod
-from enum import Enum
-from typing import Dict
+from enum import Enum, auto
+from typing import Dict, Tuple, List, Optional
+
+import tetris.config as cfg
 
 
 class Key(Enum):
     """List of  keys' names to manage ingame motions and gameplay"""
-    ...
+    LEFTARROW = auto()
+    RIGHTARROW = auto()
+    UPARROW = auto()
 
 
 class IFigureState(ABC):
