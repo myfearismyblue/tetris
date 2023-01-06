@@ -13,16 +13,10 @@ class Key(Enum):
 
 
 class IFigureState(ABC):
-    """Interface for a figure various states"""
-    ...
-
-
-class IFieldState(ABC):
     """
-    Interface for game field data structure
+    Interface for a figure various states.
     Supposed to be nested iterable
     """
-
     def __new__(cls, *args, **kwargs):
         """Force check to prove iterable[iterable]"""
         given_state = args[0] if len(args) else None or kwargs.get('state')
@@ -46,6 +40,12 @@ class IFieldState(ABC):
             raise TypeError(f'{state=} should be Iterable[Iterable] but was given a flat iterable') from flat_list_given
 
         raise TypeError(f'Validation of {state=} is failed. Should be Iterable[Iterable] but was given {type(state)}')
+
+class IFieldState(IFigureState, ABC):
+    """
+    Interface for game field data structure
+    Supposed to be nested iterable
+    """
 
 
 class IFigure(ABC):
