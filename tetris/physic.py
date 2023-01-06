@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
+from dataclasses import dataclass
 from enum import Enum, auto
-from typing import Dict, Tuple, List, Optional
+from typing import Dict, Tuple, List, Optional, Iterable
 
 import tetris.config as cfg
 
@@ -49,34 +50,24 @@ class IFieldState(IFigureState, ABC):
 
 
 class IFigure(ABC):
+    """
+    Abstract type of any kind of figure that is falling down
+    """
     @property
     @abstractmethod
-    def _width(self) -> int:
+    def width(self) -> int:
         ...
 
     @property
     @abstractmethod
-    def _height(self) -> int:
+    def height(self) -> int:
         ...
 
     @property
     @abstractmethod
-    def _current_state(self) -> IFigureState:
-        ...
-
-    @property
-    @abstractmethod
-    def _states(self) -> Dict[Key, IFigureState]:
+    def states(self) -> Dict[Key, IFigureState]:
         """Various possible states have to be provided"""
         ...
-
-    @abstractmethod
-    def change_state(self, key: Key):
-        pass
-
-    @abstractmethod
-    def get_current_state(self):
-        pass
 
 
 class IField(ABC):
@@ -210,4 +201,15 @@ class Field(IField):
     def _update_field_state(self, figure: IFigure):
         """Appends the figure to the field plot"""
         pass
+
+
+@dataclass
+class Figure(IFigure):
+    width: int
+    height: int
+    states: Dict[Key, IFigureState]
+
+
+
+
 
