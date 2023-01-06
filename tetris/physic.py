@@ -248,12 +248,16 @@ class FigureBuilder(IFigureBuilder):
         if self.__figure is None:
             raise ValueError(f'Builder hasn''t been reset. Use reset() and set_state() to build a figure')
         state = FigureState(state)
-        if len(state) == self.__figure.height and len(state[0]) == self.__figure.width:
+        dimensions_are_same = len(state) == self.__figure.height and len(state[0]) == self.__figure.width
+        if dimensions_are_same:
             self.__figure[key] = state
+            return
         else:
             raise ValueError(f'Figure and FigureState dimensions dissmiss. '
                              f'Figure is w={self.__figure.width}, h={self.__figure.height}.'
                              f'Appending state is w={len(state)}, h={len(state[0])}')
+
+        assert False
 
     def get_result(self) -> IFigure:
         return self._figure
