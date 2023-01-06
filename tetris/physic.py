@@ -49,25 +49,17 @@ class IFieldState(IFigureState, ABC):
     """
 
 
+@dataclass
 class IFigure(ABC):
     """
     Abstract type of any kind of figure that is falling down
     """
-    @property
-    @abstractmethod
-    def width(self) -> int:
-        ...
+    width: int
+    height: int
+    states: Optional[Dict[Key, IFigureState]]
 
-    @property
-    @abstractmethod
-    def height(self) -> int:
-        ...
-
-    @property
-    @abstractmethod
-    def states(self) -> Dict[Key, IFigureState]:
-        """Various possible states have to be provided"""
-        ...
+    def __setitem__(self, k, v):
+        self.states[k] = v
 
 
 class IField(ABC):
@@ -203,11 +195,12 @@ class Field(IField):
         pass
 
 
-@dataclass
 class Figure(IFigure):
-    width: int
-    height: int
-    states: Dict[Key, IFigureState]
+    """
+    Just the same but concrete representation of interface
+    """
+    ...
+
 
 
 
