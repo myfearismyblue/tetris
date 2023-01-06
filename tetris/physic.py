@@ -148,6 +148,26 @@ class FieldState(IFieldState, List):
             super().__init__(state)
 
 
+class FigureState(IFigureState, List):
+    """Type to store a state of a figure"""
+
+    def __init__(self, state: Optional[IFigureState] = None, **kwargs: int):
+        """
+        Creates an empty List[List[int]]-like with 'width' and 'height' parameters specified in kwargs,
+        or validates a given state
+        """
+        # FIXME: just temporary aggregating of the FieldState behaviour
+        if state is None:
+            try:
+                # should maintain the consistence of [[]] if height is 0
+                kwargs['height'] = 1 if kwargs['height'] == 0 else kwargs['height']
+                super().__init__([[0] * kwargs['width'] for _ in range(kwargs['height'])])
+            except KeyError as e:
+                raise TypeError(f'If state is not given, width and height kwargs have to be provided') from e
+        else:
+            super().__init__(state)
+
+
 class Field(IField):
 
     def __init__(self, *, width: int = cfg.FIELD_WIDTH, height: int = cfg.FIELD_HEIGHT, state: IFieldState = None):
