@@ -42,6 +42,7 @@ class IFigureState(ABC):
 
         raise TypeError(f'Validation of {state=} is failed. Should be Iterable[Iterable] but was given {type(state)}')
 
+
 class IFieldState(IFigureState, ABC):
     """
     Interface for game field data structure
@@ -202,7 +203,59 @@ class Figure(IFigure):
     ...
 
 
+class IFigureBuilder(ABC):
+    """
+    Abstract builder to create Figures
+    """
+
+    @property
+    @abstractmethod
+    def _figure(self) -> IFigure:
+        ...
+
+    @abstractmethod
+    def reset(self, *, width, height):
+        ...
+
+    @abstractmethod
+    def set_state(self, *, key: Key, state: IFigureState):
+        ...
+
+    @abstractmethod
+    def get_result(self) -> IFigure:
+        ...
 
 
+class FigureBuilder(IFigureBuilder):
+    def __init__(self):
+        self.__figure = Figure(width=0, height=0, states=None)
+
+    @property
+    def _figure(self) -> IFigure:
+        if self.__figure.states is None:
+            raise ValueError(f'Builder hasn''t been reset. Use reset() and set_state() to build a figure')
+        return self.__figure
+
+    def reset(self, *, width: int, height: int):
+        self.__figure.states = {}
+        self.__figure.width = width
+        self.__figure.height = height
+        for key in Key.__members__:
+            empty = FigureState([[0] * width for _ in range(height)])
+            self.__figure[Key[key]] = empty
+
+    def set_state(self, *, key: Key, state: IFigureState):
+        if self.__figure is None:
+            raise ValueError(f'Builder hasn''t been reset. Use reset() and set_state() to build a figure')
+        state = FigureState(state)
+        if len(state) == self.__figure.height and len(state[0]) == self.__figure.width:
+            self.__figure[key] = state
+        else:
+            raise ValueError(f'Figure and FigureState dimensions dissmiss. '
+                             f'Figure is w={self.__figure.width}, h={self.__figure.height}.'
+                             f'Appending state is w={len(state)}, h={len(state[0])}')
+
+    def get_result(self) -> IFigure:
+        return self._figure
 
 
