@@ -140,16 +140,35 @@ class FigureState(IFigureState, List):
         Creates an empty List[List[int]]-like with 'width' and 'height' parameters specified in kwargs,
         or validates a given state
         """
-        # FIXME: just temporary aggregating of the FieldState behaviour
+
+        self. _validate_dimensions(state, **kwargs)
+        if state is None:
+            state = [[0] * kwargs['width'] for _ in range(kwargs['height'])]
+
+        super().__init__(state)
+
+    @staticmethod
+    def _validate_dimensions(state: Union[IFigureState, Iterable[Iterable], type(None)], **kwargs):
+        """
+        Validates state to be Iterable[Iterable] and to have non zero  length. If state is not given, then width
+        and height have to be provided in kwargs. Raises exceptions if validation is failed.
+        :param state:  Iterable of iterable with not zero length
+        :param kwargs: width and height should be provided if state hasn't been
+        :return None:
+        """
         if state is None:
             try:
-                # should maintain the consistence of [[]] if height is 0
-                kwargs['height'] = 1 if kwargs['height'] == 0 else kwargs['height']
-                super().__init__([[0] * kwargs['width'] for _ in range(kwargs['height'])])
+                _w = kwargs['width']
+                _h = kwargs['height']
+                if not isinstance(_w, int) or not isinstance(_h, int) or _w <= 0 or _h <= 0:
+                    raise ValueError('Dimensions have to be positive integers')
             except KeyError as e:
                 raise TypeError(f'If state is not given, width and height kwargs have to be provided') from e
         else:
-            super().__init__(state)
+            try:
+                state[0][0]
+            except IndexError as empty_list_given:
+                raise ValueError(f'State shouldn\'t be empty') from empty_list_given
 
 
 class Field(IField):
@@ -241,7 +260,7 @@ class FigureBuilder(IFigureBuilder):
         self.__figure.width = width
         self.__figure.height = height
         for key in Key.__members__:
-            empty = FigureState([[0] * width for _ in range(height)])
+            empty = FigureState(width=width, height=height)
             self.__figure[Key[key]] = empty
 
     def set_state(self, *, key: Key, state: Union[IFigureState, Iterable[Iterable]]):
