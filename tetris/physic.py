@@ -55,8 +55,7 @@ class IFigure(ABC):
     """
     Abstract type of any kind of figure that is falling down
     """
-    width: int
-    height: int
+    current_state: Key
     states: Optional[Dict[Key, IFigureState]]
 
     def __setitem__(self, k, v):
@@ -241,13 +240,17 @@ class IFigureBuilder(ABC):
         ...
 
     @abstractmethod
+    def set_current_state(self, key: Key):
+        ...
+
+    @abstractmethod
     def get_result(self) -> IFigure:
         ...
 
 
 class FigureBuilder(IFigureBuilder):
     def __init__(self):
-        self.__figure = Figure(width=0, height=0, states=None)
+        self.__figure = Figure(current_state=None, states=None)
 
     @property
     def _figure(self) -> IFigure:
@@ -255,28 +258,26 @@ class FigureBuilder(IFigureBuilder):
             raise ValueError(f'Builder hasn''t been reset. Use reset() and set_state() to build a figure')
         return self.__figure
 
+    @_figure.setter
+    def _figure(self, new_fig: Optional[IFigure]) -> None:
+        self.__figure = new_fig
+
     def reset(self, *, width: int, height: int):
-        self.__figure.states = {}
-        self.__figure.width = width
-        self.__figure.height = height
+        self._figure.states = {}
+        self._figure.current_state = Key.__members__[0]
         for key in Key.__members__:
             empty = FigureState(width=width, height=height)
             self.__figure[Key[key]] = empty
 
-    def set_state(self, *, key: Key, state: Union[IFigureState, Iterable[Iterable]]):
-        if self.__figure is None:
-            raise ValueError(f'Builder hasn''t been reset. Use reset() and set_state() to build a figure')
-        state = FigureState(state)
-        dimensions_are_same = len(state) == self.__figure.height and len(state[0]) == self.__figure.width
-        if dimensions_are_same:
-            self.__figure[key] = state
-            return
-        else:
-            raise ValueError(f'Figure and FigureState dimensions dissmiss. '
-                             f'Figure is w={self.__figure.width}, h={self.__figure.height}.'
-                             f'Appending state is w={len(state)}, h={len(state[0])}')
 
-        assert False
+    def set_state(self, *, key: Key, state: Union[IFigureState, Iterable[Iterable]]):
+        state = FigureState(state)
+        self._figure[key] = state
+        return
+
+    def set_current_state(self, key: Key):
+        assert key in Key
+        self._figure.current_state = key
 
     def get_result(self) -> IFigure:
         return self._figure

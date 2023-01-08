@@ -53,8 +53,7 @@ def test_FigureState_exceptions(expected_exception, args, kwargs):
 
 def test_FigureBuilder___init__(dummy_figure_builder: IFigureBuilder):
     assert dummy_figure_builder._FigureBuilder__figure.states is None
-    assert dummy_figure_builder._FigureBuilder__figure.width == 0
-    assert dummy_figure_builder._FigureBuilder__figure.height == 0
+    assert dummy_figure_builder._FigureBuilder__figure.current_state is None
 
 
 @pytest.mark.parametrize('width, height',
