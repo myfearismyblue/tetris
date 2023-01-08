@@ -178,7 +178,7 @@ class Field(IField):
         Creates an empty List[List[int]]-like with 'width' and 'height' parameters specified in kwargs,
         or validates a given state
         """
-        self.__state = FieldState(state, width=width, height=height)
+        self.__state = FieldState(width=width, height=height) if state is None else FieldState(state)
         self.__width = len(self.__state[0])
         self.__height = len(self.__state)
 
@@ -280,5 +280,6 @@ class FigureBuilder(IFigureBuilder):
 
     def get_result(self) -> IFigure:
         return self._figure
+
 
 
