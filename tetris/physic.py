@@ -166,13 +166,20 @@ class FieldState(IFieldState, List):
         """
         if state is None:
             try:
-                # should maintain the consistence of [[]] if height is 0
-                kwargs['height'] = 1 if kwargs['height'] == 0 else kwargs['height']
                 super().__init__([[0] * kwargs['width'] for _ in range(kwargs['height'])])
             except KeyError as e:
                 raise TypeError(f'If state is not given, width and height kwargs have to be provided') from e
         else:
             super().__init__(state)
+
+
+    @property
+    def width(self) -> int:
+        return len(self[0])
+
+    @property
+    def height(self) -> int:
+        return len(self)
 
 
 class FigureState(IFigureState, List):
