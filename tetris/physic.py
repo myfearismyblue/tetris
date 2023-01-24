@@ -364,19 +364,24 @@ class FigureBuilder(IFigureBuilder):
         self.__figure = new_fig
 
     def reset(self, *, width: int, height: int):
-        self._figure.states = {}
-        self._figure.current_state = Key.__members__[0]
-        for key in Key.__members__:
+        self.__figure.states = {}
+        self.__figure.current_state = Key(1)
+        for key in Key:
             empty = FigureState(width=width, height=height)
-            self.__figure[Key[key]] = empty
+            self.__figure[key] = empty
 
-
-    def set_state(self, *, key: Key, state: Union[IFigureState, Iterable[Iterable]]):
+    def set_state(self, *, key: Key, state: Union[IFigureState, Iterable[Iterable]]) -> None:
+        """
+        Sets state to the key
+        :param key: A key enlisted in Key to which the state stands to
+        :param state: Not empty iterable of iterables
+        :return: None
+        """
         state = FigureState(state)
         self._figure[key] = state
-        return
 
     def set_current_state(self, key: Key):
+        """Sets the given key as a figure current state key"""
         assert key in Key
         self._figure.current_state = key
 
