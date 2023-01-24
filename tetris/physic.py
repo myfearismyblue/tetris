@@ -91,11 +91,19 @@ class IFigure(ABC):
     """
     Abstract type of any kind of figure that is falling down
     """
-    current_state: Key
+    current_state: Optional[Key]
     states: Optional[Dict[Key, IFigureState]]
 
     def __setitem__(self, k, v):
         self.states[k] = v
+
+    def __getitem__(self, k):
+        return self.states[k]
+
+
+    @abstractmethod
+    def get_current_state(self):
+        ...
 
 
 class IField(ABC):
@@ -265,7 +273,8 @@ class Figure(IFigure):
     """
     Just the same but concrete representation of interface
     """
-    ...
+    def get_current_state(self):
+        return self.states[self.current_state]
 
 
 class IFigureBuilder(ABC):
