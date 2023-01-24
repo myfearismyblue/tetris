@@ -6,6 +6,24 @@ from typing import Dict, Tuple, List, Optional, Iterable, Union
 import tetris.config as cfg
 
 
+class DomainException(Exception):
+    """
+    Exception class for business domain
+    """
+
+
+class PhysicException(DomainException):
+    """
+    Common exception class for in-game physic
+    """
+
+
+class ObjectIntersectionException(PhysicException):
+    """
+    Raises when two object somehow have mutual intersection in a game field
+    """
+
+
 class Key(Enum):
     """List of  keys' names to manage ingame motions and gameplay"""
     LEFTARROW = auto()
