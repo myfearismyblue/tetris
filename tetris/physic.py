@@ -123,7 +123,7 @@ class IField(ABC):
         ...
 
     @abstractmethod
-    def _update_field_state(self, figure: IFigure):
+    def _update_field_state(self, figure: IFigure, x: int, y: int):
         pass
 
 
@@ -264,9 +264,47 @@ class Field(IField):
     def _state(self, val: IFieldState):
         self.__state = val
 
-    def _update_field_state(self, figure: IFigure):
-        """Appends the figure to the field plot"""
-        pass
+    def _update_field_state(self, figure: IFigure, x: int, y: int) -> None:
+        """
+        Appends the figure to the field plot.
+        :param figure: A figure with defined current_state
+        :param x: Index of a column on the field corresponds to left upper corner of the figure
+        :param y: Index of a row on the field corresponds to left upper corner of the figure
+        :return: None
+        """
+        def _validate_figure_coords(figure: IFigure, x: int, y: int) -> None:
+            """
+            Validates if a given figure dimensions are inside the field
+            """
+            current_state: IFigureState = figure.get_current_state()
+            figure_right_and_bottom_edge_in = (0 <= current_state.width - 1 + x < self._width and
+                                               0 <= current_state.height - 1 + y < self._height)
+            figure_left_and_upper_edge_in = 0 <= x < self._width and 0 <= y < self._height
+            if figure_right_and_bottom_edge_in and figure_left_and_upper_edge_in:
+                return
+
+            raise ValueError(f'Current state of the figure is out of the field borders. '
+                             f'Figure position: {x=}, {y=}. Figure dims: {current_state.width} x {current_state.height}'
+                             f'Field dims: {self._width} x {self._height}.')
+
+        def check_intersection_and_append() -> None:
+            """
+            Checks if figure could be appended to the game field by validating the absense of intersections of filed
+            state and figure current state. If so append to the field state.
+            :return:
+            """
+            figure_state: IFigureState = figure.get_current_state()
+            for row_idx in range(figure_state.height):
+                for el_idx in range(figure_state.width):
+                    if figure_state[row_idx][el_idx] and self._state[row_idx + y][el_idx + x]:
+                        raise ObjectIntersectionException(f'Figure and field has intersections: \n'
+                                                          f'Figure {row_idx=}, {el_idx=} and '
+                                                          f'field row_idx={row_idx + y}, el_idx={row_idx + y}')
+                    else:
+                        self._state[row_idx + y][el_idx + x] = figure_state[row_idx][el_idx]
+
+        _validate_figure_coords(figure, x, y)
+        check_intersection_and_append()
 
 
 class Figure(IFigure):
