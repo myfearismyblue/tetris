@@ -7,12 +7,10 @@ _FIGURE_WIDTH = 2
 _FIGURE_HEIGHT = 2
 
 
-@pytest.fixture
 def FIGURE_WIDTH():
     return _FIGURE_WIDTH
 
 
-@pytest.fixture
 def FIGURE_HEIGHT():
     return _FIGURE_HEIGHT
 
@@ -33,6 +31,10 @@ def empty_figure_builder() -> IFigureBuilder:
 
 
 @pytest.fixture
-def preset_figure_builder():
-    fb = empty_figure_builder()
-    fb.set_state(key=Key.__members__[0], state=[[1, 1], [0, 0]])
+def preset_figure_builder() -> IFigureBuilder:
+    state = [[1, 1], [0, 0]]
+    key = Key(1)
+    fb = FigureBuilder()
+    fb.reset(width=FIGURE_WIDTH(), height=FIGURE_HEIGHT())
+    fb.set_state(key=key, state=state)
+    return fb

@@ -1,6 +1,6 @@
 import pytest
 
-from tetris.physic import FieldState, FigureState, FigureBuilder, IFigureBuilder
+from tetris.physic import FieldState, FigureState, FigureBuilder, IFigureBuilder, Key
 
 
 @pytest.mark.parametrize('expected, args, kwargs',
@@ -56,12 +56,26 @@ def test_FigureBuilder___init__(dummy_figure_builder: IFigureBuilder):
     assert dummy_figure_builder._FigureBuilder__figure.current_state is None
 
 
-@pytest.mark.parametrize('width, height',
-                         [(0, 0),
-                          (1, 10),
+@pytest.mark.parametrize('expected, width, height',
+                         [([1, 1], 1, 1),
+                          ([10, 1], 1, 10),
                           ])
-def test_FigureBuilder_reset(width, height, empty_figure_builder: IFigureBuilder):
-    assert False
+def test_FigureBuilder_reset(expected, width, height, dummy_figure_builder: IFigureBuilder):
+    fb = dummy_figure_builder
+    fb.reset(width=width, height=height)
+    for key in Key:
+        state = fb._figure[key]
+        assert len(state) == expected[0] == state.height
+        assert len(state[0]) == expected[1] == state.width
+    assert len(fb._figure.states) == len(Key)
+
+
+def test_FigureBuilder_get_result(preset_figure_builder):
+    res = preset_figure_builder.get_result()
+    assert res[Key(1)][0][0] == 1
+    assert res[Key(1)][0][1] == 1
+    assert res[Key(1)][1][0] == 0
+    assert res[Key(1)][1][1] == 0
 
 
 @pytest.mark.parametrize('expected_exception', (ValueError, ))
