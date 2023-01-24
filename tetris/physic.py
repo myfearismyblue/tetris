@@ -43,6 +43,14 @@ class IFigureState(ABC):
         self = super().__new__(cls)
         return self
 
+    @abstractmethod
+    def __getitem__(self):
+        ...
+
+    @abstractmethod
+    def __setitem__(self):
+        ...
+
     @staticmethod
     def _validate_nested_iterable(state) -> None:
         """
@@ -59,6 +67,16 @@ class IFigureState(ABC):
             raise TypeError(f'{state=} should be Iterable[Iterable] but was given a flat iterable') from flat_list_given
 
         raise TypeError(f'Validation of {state=} is failed. Should be Iterable[Iterable] but was given {type(state)}')
+
+    @property
+    @abstractmethod
+    def width(self):
+        ...
+
+    @property
+    @abstractmethod
+    def height(self):
+        ...
 
 
 class IFieldState(IFigureState, ABC):
@@ -164,6 +182,9 @@ class FigureState(IFigureState, List):
 
         super().__init__(state)
 
+    def __getitem__(self, item):    # what the hack? why __getitem isnot inherited
+        return list(self).__getitem__(item)
+
     @staticmethod
     def _validate_dimensions(state: Union[IFigureState, Iterable[Iterable], type(None)], **kwargs):
         """
@@ -186,6 +207,14 @@ class FigureState(IFigureState, List):
                 state[0][0]
             except IndexError as empty_list_given:
                 raise ValueError(f'State shouldn\'t be empty') from empty_list_given
+
+    @property
+    def width(self) -> int:
+        return len(self[0])
+
+    @property
+    def height(self) -> int:
+        return len(self)
 
 
 class Field(IField):

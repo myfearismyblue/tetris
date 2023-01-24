@@ -17,7 +17,7 @@ def FIGURE_HEIGHT():
 
 @pytest.fixture
 def dummy_figure(width=FIGURE_WIDTH, height=FIGURE_HEIGHT) -> IFigure:
-    return Figure(width=width, height=height, states=None)
+    return Figure(current_state=None, states=None)
 
 
 @pytest.fixture
