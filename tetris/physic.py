@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import Enum, auto
+import random
 from typing import Dict, Tuple, List, Optional, Iterable, Union
 
 import tetris.config as cfg
@@ -100,6 +101,16 @@ class IFigure(ABC):
     def __getitem__(self, k):
         return self.states[k]
 
+    @property
+    @abstractmethod
+    def width(self):
+        ...
+
+    @property
+    @abstractmethod
+    def height(self):
+        ...
+
 
     @abstractmethod
     def get_current_state(self):
@@ -109,50 +120,25 @@ class IFigure(ABC):
 class IField(ABC):
     @property
     @abstractmethod
-    def _width(self) -> int:
+    def width(self) -> int:
         ...
 
     @property
     @abstractmethod
-    def _height(self) -> int:
+    def height(self) -> int:
         ...
 
     @property
     @abstractmethod
-    def _state(self) -> IFieldState:
+    def state(self) -> IFieldState:
         ...
 
     @abstractmethod
-    def _update_field_state(self, figure: IFigure, x: int, y: int):
+    def update_field_state(self, figure: IFigure, x: int, y: int):
         pass
 
-
-class IPhysic(ABC):
-    """Interface for game physics managing"""
-    @property
     @abstractmethod
-    def _field(self) -> IField:
-        ...
-
-    @property
-    @abstractmethod
-    def _figure(self) -> IFigure:
-        ...
-
-    @abstractmethod
-    def _collision_check(self):
-        ...
-
-    @abstractmethod
-    def move(self, key: Key):
-        ...
-
-    @abstractmethod
-    def spawn_figure(self):
-        ...
-
-    @abstractmethod
-    def get_current_state(self):
+    def validate_figure_coords(self, figure: IFigure, x: int, y: int) -> None:
         ...
 
 
@@ -244,34 +230,49 @@ class Field(IField):
         self.__height = len(self.__state)
 
     @property
-    def _width(self) -> int:
+    def width(self) -> int:
         return self.__width
 
-    @_width.setter
+    @width.setter
     def _width(self, val: int):
         if not isinstance(val, int):
             raise TypeError(f'Width can not be set with {val}')
         self.__width = val
 
     @property
-    def _height(self) -> int:
+    def height(self) -> int:
         return self.__height
 
-    @_height.setter
+    @height.setter
     def _height(self, val: int):
         if not isinstance(val, int):
             raise TypeError(f'Height can not be set with {val}')
         self.__height = val
 
     @property
-    def _state(self) -> IFieldState:
+    def state(self) -> IFieldState:
         return self.__state
 
-    @_state.setter
+    @state.setter
     def _state(self, val: IFieldState):
         self.__state = val
 
-    def _update_field_state(self, figure: IFigure, x: int, y: int) -> None:
+    def validate_figure_coords(self, figure: IFigure, x: int, y: int) -> None:
+        """
+        Validates if a given figure dimensions are inside the field
+        """
+        current_state: IFigureState = figure.get_current_state()
+        figure_right_and_bottom_edge_in = (0 <= current_state.width - 1 + x < self.width and
+                                           0 <= current_state.height - 1 + y < self.height)
+        figure_left_and_upper_edge_in = 0 <= x < self.width and 0 <= y < self.height
+        if figure_right_and_bottom_edge_in and figure_left_and_upper_edge_in:
+            return
+
+        raise ValueError(f'Current state of the figure is out of the field borders. '
+                         f'Figure position: {x=}, {y=}. Figure dims: {current_state.width} x {current_state.height}'
+                         f'Field dims: {self.width} x {self.height}.')
+
+    def update_field_state(self, figure: IFigure, x: int, y: int) -> None:
         """
         Appends the figure to the field plot.
         :param figure: A figure with defined current_state
@@ -279,20 +280,7 @@ class Field(IField):
         :param y: Index of a row on the field corresponds to left upper corner of the figure
         :return: None
         """
-        def _validate_figure_coords(figure: IFigure, x: int, y: int) -> None:
-            """
-            Validates if a given figure dimensions are inside the field
-            """
-            current_state: IFigureState = figure.get_current_state()
-            figure_right_and_bottom_edge_in = (0 <= current_state.width - 1 + x < self._width and
-                                               0 <= current_state.height - 1 + y < self._height)
-            figure_left_and_upper_edge_in = 0 <= x < self._width and 0 <= y < self._height
-            if figure_right_and_bottom_edge_in and figure_left_and_upper_edge_in:
-                return
 
-            raise ValueError(f'Current state of the figure is out of the field borders. '
-                             f'Figure position: {x=}, {y=}. Figure dims: {current_state.width} x {current_state.height}'
-                             f'Field dims: {self._width} x {self._height}.')
 
         def check_intersection_and_append() -> None:
             """
@@ -303,14 +291,14 @@ class Field(IField):
             figure_state: IFigureState = figure.get_current_state()
             for row_idx in range(figure_state.height):
                 for el_idx in range(figure_state.width):
-                    if figure_state[row_idx][el_idx] and self._state[row_idx + y][el_idx + x]:
+                    if figure_state[row_idx][el_idx] and self.state[row_idx + y][el_idx + x]:
                         raise ObjectIntersectionException(f'Figure and field has intersections: \n'
                                                           f'Figure {row_idx=}, {el_idx=} and '
                                                           f'field row_idx={row_idx + y}, el_idx={row_idx + y}')
                     else:
-                        self._state[row_idx + y][el_idx + x] = figure_state[row_idx][el_idx]
+                        self.state[row_idx + y][el_idx + x] = figure_state[row_idx][el_idx]
 
-        _validate_figure_coords(figure, x, y)
+        self.validate_figure_coords(figure, x, y)
         check_intersection_and_append()
 
 
@@ -318,6 +306,16 @@ class Figure(IFigure):
     """
     Just the same but concrete representation of interface
     """
+
+    @property
+    def width(self):
+        return self.get_current_state().width
+
+    @property
+    def height(self):
+        return self.get_current_state().height
+
+
     def get_current_state(self):
         return self.states[self.current_state]
 
@@ -389,4 +387,134 @@ class FigureBuilder(IFigureBuilder):
         return self._figure
 
 
+class IPhysic(ABC):
+    """Interface for game physics managing"""
 
+    @property
+    @abstractmethod
+    def _field(self) -> IFieldState:
+        ...
+
+    @property
+    @abstractmethod
+    def _available_figures(self) -> Iterable[IFigure]:
+        ...
+
+    @property
+    @abstractmethod
+    def _current_figure(self) -> IFigure:
+        ...
+
+    @property
+    @abstractmethod
+    def _figure_position(self) -> Iterable(int, int):
+        ...
+
+    @abstractmethod
+    def _collision_check(self):
+        ...
+
+    @abstractmethod
+    def _move_figure(self, figure: IFigure, x: int, y: int):
+        ...
+
+    def _rotate_figure(self, figure: IFigure, key: Key):
+        ...
+
+    @abstractmethod
+    def start_game(self):
+        ...
+
+    @abstractmethod
+    def get_current_field_state(self):
+        ...
+
+    @abstractmethod
+    def get_current_figure_state(self):
+        ...
+
+
+class Physic(IPhysic):
+
+    def __init__(self, *, initial_field: IFieldState, available_figures: Iterable[IFigure], initial_score: int = 0):
+        self._field = initial_field     # validation in setter while instancing Field cls
+        self._available_figures = available_figures
+        self._current_figure = self._choose_current_figure()
+        self._figure_position = self._choose_current_position()
+        self._lines_scored: int = initial_score
+
+    @property
+    def _field(self) -> IField:
+        return self.__field
+
+    @_field.setter
+    def _field(self, val: IFieldState):
+        self.__field = Field(state=val)
+
+    @property
+    def _available_figures(self) -> Iterable[IFigure]:
+        return self.__available_figures
+
+    @_available_figures.setter
+    def _available_figures(self, val: Iterable[IFigure]):
+        if not len(val):
+            self.__available_figures = []
+            return
+
+        for figure in val:
+            break  # FIXME: validate each
+            raise ValueError
+
+        self.__available_figures = list(val)
+
+    @property
+    def _current_figure(self):
+        return self.__current_figure
+
+    @_current_figure.setter
+    def _current_figure(self, val: IFigure):
+        self.__current_figure = val  # FIXME: validation has to be maintained in Figure entity
+
+    @property
+    def _figure_position(self):
+        return self.__figure_position
+
+    @_figure_position.setter
+    def _figure_position(self, val: Iterable[int, int]):
+        if len(val) != 2 or all([isinstance(val[0], int), isinstance(val[1], int), ]):
+            raise TypeError(f'Wrong figure coords type. Has to be Itetrable[int, int],'
+                            f'but was given: {val}.')
+
+        self._field.validate_figure_coords(self._current_figure, x=val[0], y=val[1])
+
+        self.__figure_position = val
+
+    def _choose_current_figure(self):
+        return random.choice(self._available_figures)
+
+    def _choose_current_position(self) -> Iterable[int, int]:
+        figure_width = self._current_figure.width
+        field_width = self._field.width
+        random_x = random.choice(range(0, field_width - figure_width + 1))
+        return random_x, 0
+
+    def _collision_check(self):
+        pass
+
+    def _move_figure(self, figure: IFigure, x: int, y: int):
+        pass
+
+    def start_game(self):
+        pass
+
+    def get_current_field_state(self):
+        pass
+
+    def get_current_figure_state(self):
+        pass
+# fb = FigureBuilder()
+# fb.reset(width=2, height=2)
+# state = fb._figure[Key.LEFTARROW]
+# a = [_ for _ in state]
+#
+# print((state[0]))
