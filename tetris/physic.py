@@ -134,11 +134,11 @@ class IField(ABC):
         ...
 
     @abstractmethod
-    def update_field_state(self, figure: IFigure, x: int, y: int):
+    def update_field_state(self, figure: IFigure, coords: Iterable[int, int]):
         pass
 
     @abstractmethod
-    def validate_figure_coords(self, figure: IFigure, x: int, y: int) -> None:
+    def validate_figure_coords(self, figure: IFigure, coords: Iterable[int, int]) -> None:
         ...
 
 
@@ -257,11 +257,16 @@ class Field(IField):
     def _state(self, val: IFieldState):
         self.__state = val
 
-    def validate_figure_coords(self, figure: IFigure, x: int, y: int) -> None:
+    def validate_figure_coords(self, figure: IFigure, coords: Iterable[int, int]) -> None:
         """
         Validates if a given figure dimensions are inside the field
         """
+
+        if len(coords) != 2 or all([isinstance(coords[0], int), isinstance(coords[1], int), ]):
+            raise TypeError(f'Wrong figure coords type. Has to be Itetrable[int, int],'
+                            f'but was given: {coords}.')
         current_state: IFigureState = figure.get_current_state()
+        x, y = coords
         figure_right_and_bottom_edge_in = (0 <= current_state.width - 1 + x < self.width and
                                            0 <= current_state.height - 1 + y < self.height)
         figure_left_and_upper_edge_in = 0 <= x < self.width and 0 <= y < self.height
@@ -272,13 +277,11 @@ class Field(IField):
                          f'Figure position: {x=}, {y=}. Figure dims: {current_state.width} x {current_state.height}'
                          f'Field dims: {self.width} x {self.height}.')
 
-    def update_field_state(self, figure: IFigure, x: int, y: int) -> None:
+    def update_field_state(self, figure: IFigure, coords: Iterable[int, int]) -> None:
         """
         Appends the figure to the field plot.
-        :param figure: A figure with defined current_state
-        :param x: Index of a column on the field corresponds to left upper corner of the figure
-        :param y: Index of a row on the field corresponds to left upper corner of the figure
-        :return: None
+        :param figure: A figure with certain current_state
+        :param coords: Indexes of a column and a row on the field corresponds to left upper corner of the figure
         """
 
 
@@ -286,8 +289,8 @@ class Field(IField):
             """
             Checks if figure could be appended to the game field by validating the absense of intersections of filed
             state and figure current state. If so append to the field state.
-            :return:
             """
+            x, y = coords
             figure_state: IFigureState = figure.get_current_state()
             for row_idx in range(figure_state.height):
                 for el_idx in range(figure_state.width):
@@ -297,8 +300,7 @@ class Field(IField):
                                                           f'field row_idx={row_idx + y}, el_idx={row_idx + y}')
                     else:
                         self.state[row_idx + y][el_idx + x] = figure_state[row_idx][el_idx]
-
-        self.validate_figure_coords(figure, x, y)
+        self.validate_figure_coords(figure, coords)
         check_intersection_and_append()
 
 
@@ -480,14 +482,14 @@ class Physic(IPhysic):
         return self.__figure_position
 
     @_figure_position.setter
-    def _figure_position(self, val: Iterable[int, int]):
-        if len(val) != 2 or all([isinstance(val[0], int), isinstance(val[1], int), ]):
-            raise TypeError(f'Wrong figure coords type. Has to be Itetrable[int, int],'
-                            f'but was given: {val}.')
+    def _figure_position(self, coords: Iterable[int, int]):
+        """
+        Validates coords input with field.validate_figure_coords. Sets coords to self.__figure_position
+        """
 
-        self._field.validate_figure_coords(self._current_figure, x=val[0], y=val[1])
+        self._field.validate_figure_coords(self._current_figure, coords)
 
-        self.__figure_position = val
+        self.__figure_position = coords
 
     def _choose_current_figure(self):
         return random.choice(self._available_figures)
