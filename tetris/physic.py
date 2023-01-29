@@ -262,7 +262,7 @@ class Field(IField):
         Validates if a given figure dimensions are inside the field
         """
 
-        if len(coords) != 2 or all([isinstance(coords[0], int), isinstance(coords[1], int), ]):
+        if len(coords) != 2 or not all([isinstance(coords[0], int), isinstance(coords[1], int), ]):
             raise TypeError(f'Wrong figure coords type. Has to be Itetrable[int, int],'
                             f'but was given: {coords}.')
         current_state: IFigureState = figure.get_current_state()
