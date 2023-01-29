@@ -284,7 +284,6 @@ class Field(IField):
         :param coords: Indexes of a column and a row on the field corresponds to left upper corner of the figure
         """
 
-
         def check_intersection_and_append() -> None:
             """
             Checks if figure could be appended to the game field by validating the absense of intersections of filed
@@ -412,12 +411,18 @@ class IPhysic(ABC):
     def _figure_position(self) -> Iterable(int, int):
         ...
 
+    @property
+    @abstractmethod
+    def input_event(self):
+        """Common attr to manage input events, like keyboard pressed etc."""
+        ...
+
     @abstractmethod
     def _collision_check(self):
         ...
 
     @abstractmethod
-    def _move_figure(self, figure: IFigure, x: int, y: int):
+    def _move_figure(self, figure: IFigure, coords: Iterable[int, int]):
         ...
 
     def _rotate_figure(self, figure: IFigure, key: Key):
@@ -425,6 +430,10 @@ class IPhysic(ABC):
 
     @abstractmethod
     def start_game(self):
+        ...
+
+    @abstractmethod
+    def stop_game(self):
         ...
 
     @abstractmethod
@@ -437,6 +446,9 @@ class IPhysic(ABC):
 
 
 class Physic(IPhysic):
+
+    def stop_game(self):
+        pass
 
     def __init__(self, *, initial_field: IFieldState, available_figures: Iterable[IFigure], initial_score: int = 0):
         self._field = initial_field     # validation in setter while instancing Field cls
@@ -484,12 +496,21 @@ class Physic(IPhysic):
     @_figure_position.setter
     def _figure_position(self, coords: Iterable[int, int]):
         """
-        Validates coords input with field.validate_figure_coords. Sets coords to self.__figure_position if valid.
+        Validates coords input with field.validate_figure_coords.
+        Checks if figure and field don't intersect. Sets coords to self.__figure_position.
         """
 
         self._field.validate_figure_coords(self._current_figure, coords)
-
+        self._check_figure_field_collision()
         self.__figure_position = coords
+
+    @property
+    def input_event(self):
+        raise NotImplementedError(f'Input events managing hasn''t been implemented yet')
+
+    @input_event.setter
+    def input_event(self, event):
+        raise NotImplementedError(f'Input events managing hasn''t been implemented yet')
 
     def _random_current_figure(self):
         return random.choice(self._available_figures)
@@ -500,10 +521,35 @@ class Physic(IPhysic):
         random_x = random.choice(range(0, field_width - figure_width + 1))
         return random_x, 0
 
-    def _collision_check(self):
-        pass
+    @staticmethod
+    def _collision_check(obj1_coords: Iterable[int, int] = (0, 0), object1: Iterable[Iterable] = None,
+                         obj2_coords: Iterable[int, int] = (0, 0), object2: Iterable[Iterable] = None):
+        """
+        Checks if two 2-dimensional objects has intersections.
+        Each object has it's own coords relatively to upper-left corner
+        Raises ObjectIntersectionException if intersection is found
+        """
+        assert object1 and object1[0]
+        object1_height = len(object1)
+        object1_width = len(object1[0])
+        for row_idx in range(object1_height):
+            for el_idx in range(object1_width):
+                if object1[row_idx + obj2_coords[1]][el_idx + obj2_coords[0]] and object2[row_idx + obj1_coords[1]][el_idx + obj1_coords[0]]:
+                    raise ObjectIntersectionException(f'Objects intersect. \n'
+                                                      f'Object1 row_idx={row_idx + obj2_coords[1]}, '
+                                                      f'el_idx={row_idx + obj2_coords[0]} and '
+                                                      f'object2 row_idx={row_idx + obj1_coords[1]}, '
+                                                      f'el_idx={row_idx + obj1_coords[0]}')
 
-    def _move_figure(self, figure: IFigure, x: int, y: int):
+    def _check_figure_field_collision(self):
+        object1 = self._current_figure.get_current_state()
+        object2 = self._field.state
+        try:
+            self._collision_check(obj1_coords=self._figure_position, object1=object1, object2 = object2)
+        except ObjectIntersectionException as OIE:
+            raise ObjectIntersectionException from OIE  # FIXME: here is another domain type of exceptions is needed
+
+    def _move_figure(self, figure: IFigure,  coords: Iterable[int, int]):
         pass
 
     def start_game(self):
