@@ -441,8 +441,8 @@ class Physic(IPhysic):
     def __init__(self, *, initial_field: IFieldState, available_figures: Iterable[IFigure], initial_score: int = 0):
         self._field = initial_field     # validation in setter while instancing Field cls
         self._available_figures = available_figures
-        self._current_figure = self._choose_current_figure()
-        self._figure_position = self._choose_current_position()
+        self._current_figure = self._random_current_figure()
+        self._figure_position = self._random_current_position()
         self._lines_scored: int = initial_score
 
     @property
@@ -484,17 +484,17 @@ class Physic(IPhysic):
     @_figure_position.setter
     def _figure_position(self, coords: Iterable[int, int]):
         """
-        Validates coords input with field.validate_figure_coords. Sets coords to self.__figure_position
+        Validates coords input with field.validate_figure_coords. Sets coords to self.__figure_position if valid.
         """
 
         self._field.validate_figure_coords(self._current_figure, coords)
 
         self.__figure_position = coords
 
-    def _choose_current_figure(self):
+    def _random_current_figure(self):
         return random.choice(self._available_figures)
 
-    def _choose_current_position(self) -> Iterable[int, int]:
+    def _random_current_position(self) -> Iterable[int, int]:
         figure_width = self._current_figure.width
         field_width = self._field.width
         random_x = random.choice(range(0, field_width - figure_width + 1))
