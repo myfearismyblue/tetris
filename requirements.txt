@@ -1,0 +1,12 @@
+attrs==22.2.0
+cmake==3.25.2
+evdev==1.6.1
+exceptiongroup==1.1.0
+iniconfig==2.0.0
+packaging==23.0
+pluggy==1.0.0
+pynput==1.7.6
+pytest==7.2.1
+python-xlib==0.33
+six==1.16.0
+tomli==2.0.1
