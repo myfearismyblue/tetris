@@ -7,7 +7,6 @@ from pynput import keyboard
 
 from container import movement_manager
 from physics import IMovementManager
-from preset_figures import *
 import config as cfg
 from services.keyboard_handlers import KeyboardHandlers
 
@@ -15,8 +14,6 @@ from services.keyboard_handlers import KeyboardHandlers
 class ClassicalApp:
     def __init__(self, movement_manager: IMovementManager):
         self._movement_manager = movement_manager
-        figures = [dash_figure, L_figure, square_figure, Z_figure, S_figure, back_L_figure,  T_figure]
-        self._movement_manager.set_available_figures(figures)
         self._keyboard_handlers = KeyboardHandlers(movement_manager=self._movement_manager)
         self._listener = keyboard.Listener(on_press=self._keyboard_handlers.on_press)
         self.score = 0
